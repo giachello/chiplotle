@@ -21,5 +21,10 @@ should work with any HPGL-compliant device.
 
 Chiplotle is written and maintained by Victor Adan and Douglas Repetto.
 
+This version includes support for Python 3.11 and also supports the HP 7440A plotter, which lacks some commands but has 8 color pens.
+This version also includes some code to simulate the missing commands for the 7440A.
+
+
+
 Find all there is to know about Chiplotle at:
 http://music.columbia.edu/cmc/chiplotle
