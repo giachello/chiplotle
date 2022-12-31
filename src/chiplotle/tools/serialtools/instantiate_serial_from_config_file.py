@@ -18,6 +18,7 @@ def instantiate_serial_from_config_file(port):
     timeout = get_config_value("timeout")
     xonxoff = get_config_value("xonxoff")
     rtscts = get_config_value("rtscts")
+    dsrdtr = get_config_value("dsrdtr")
     ser = serial.Serial(
         port=port,
         bytesize=bytesize,
@@ -26,5 +27,6 @@ def instantiate_serial_from_config_file(port):
         timeout=timeout,
         xonxoff=xonxoff,
         rtscts=rtscts,
+        dsrdtr=dsrdtr,
     )
     return ser

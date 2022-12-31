@@ -21,6 +21,7 @@
 ## e.g., {'/dev/ttyS0' : 'DXY-1300', '/dev/ttyS1' : 'HP7475A'}
 ## sets plotter 'DXY-1300' to port '/dev/ttyS0' and plotter
 ## 'HP7475A' to port '/dev/ttyS1'.
+## Similarly, on Windows: {'COM4' : 'HP7440A' }
 serial_port_to_plotter_map = {'/dev/usb/lp0': 'DXY-1300'}
 
 
@@ -33,7 +34,7 @@ stopbits = 1
 timeout = 1
 xonxoff = 1
 rtscts = 0
-
+dsrdts = 0
 
 ## Maximum wait time for response from plotter.
 ## Every time the plotter is queried, Chiplotle will wait for
@@ -46,3 +47,6 @@ maximum_response_wait_time = 8
 verbose = True
 
 
+## Set to True if you want to disable Chiplotle's own flow control 
+## algorithm (e.g., if you have enabled xonxoff, rtscts or dsrdtr above)  
+disable_software_flow_control = False

@@ -9,7 +9,7 @@ from future import standard_library
 standard_library.install_aliases()
 from chiplotle.geometry.core.polygon import Polygon
 import math
-from fractions import gcd
+from math import gcd
 
 
 def star_crisscross(

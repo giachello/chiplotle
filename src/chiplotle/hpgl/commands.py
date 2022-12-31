@@ -77,29 +77,37 @@ class CI(_HPGLPrimitive):
     _scalable = ["radius"]
 
     def __init__(self, radius, chordangle=None):
-        self.radius = radius
-        self.chordangle = chordangle
+        self._radius = radius
+        self._chordangle = chordangle
 
-    def radius():
-        def fget(self):
-            """The radius of the circle."""
-            return self._radius
+    def _radius_fget(self):
+        """The radius of the circle."""
+        return self._radius
 
-        def fset(self, arg):
-            ### TODO: check for type here?
-            self._radius = arg
+    def _radius_fset(self, arg):
+        """Set the radius of the circle."""
+        self._radius = arg
 
-        return property(**locals())
+    radius = property(fset= _radius_fset, fget = _radius_fget, doc = "Radius property")
 
-    radius = radius()
+    def _chordangle_fget(self):
+        """The chordangle of the circle."""
+        return self._chordangle
+
+    def _chordangle_fset(self, arg):
+        """Set the chordangle of the circle."""
+        self._chordangle = arg
+
+    chordangle = property(fset= _chordangle_fset, fget = _chordangle_fget, doc = "Chord Angle property")
+
 
     @property
     def format(self):
-        if self.chordangle:
+        if self._chordangle:
             return b"%s%.2f,%.2f%s" % (
                 self._name,
                 self.radius,
-                self.chordangle,
+                self._chordangle,
                 _HPGLPrimitive._terminator,
             )
         else:
@@ -1211,7 +1219,7 @@ class KY(_HPGLPrimitive):
 
     def __init__(self, key=None, function=None):
         self.key = key
-        self.function = left
+        self.function = function
 
     @property
     def format(self):
@@ -1614,20 +1622,17 @@ class SetHandshakeMode(_HPGLEscape):
    """
 
     def __init__(self, mode=None):
-        self.mode = mode
+        self._mode = mode
 
-    def mode():
-        def fget(self):
-            return self._mode
+    def mode_fget(self):
+        return self._mode
 
-        def fset(self, mode):
-            if not mode in (None, 0, 1, 2, 3):
-                raise ValueError("mode must be in (0,1,2,3).")
-            self._mode = mode
+    def mode_fset(self, mode):
+        if not mode in (None, 0, 1, 2, 3):
+            raise ValueError("mode must be in (0,1,2,3).")
+        self._mode = mode
 
-        return property(**locals())
-
-    mode = mode()
+    mode = property(fget = mode_fget, fset = mode_fset, doc ="The handshake Mode property")
 
     @property
     def _name(self):

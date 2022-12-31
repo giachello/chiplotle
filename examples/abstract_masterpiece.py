@@ -37,7 +37,7 @@ def main(args, width=30000, height=20000, left=0, right=30000, bottom=0, top=200
     # start in a random spot
     plot = abstract_masterpiece(top, bottom, left, right, height, width, pen_count)
     if args.output is None or args.view:
-        io.view(plot)
+        io.view(plot, fmt="hpgl")
     if args.output is not None:
         output_name, extension = os.path.splitext(args.output)
         io.export(plot, output_name, fmt=extension[1:])

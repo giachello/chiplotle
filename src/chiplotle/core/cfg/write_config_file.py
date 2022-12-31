@@ -39,6 +39,7 @@ def write_config_file(path):
         f.write("## e.g., {'/dev/ttyS0' : 'DXY-1300', '/dev/ttyS1' : 'HP7475A'}\n")
         f.write("## sets plotter 'DXY-1300' to port '/dev/ttyS0' and plotter\n")
         f.write("## 'HP7475A' to port '/dev/ttyS1'.\n")
+        f.write("## Similarly, on Windows: {'COM4' : 'HP7440A' }\n")
         f.write("serial_port_to_plotter_map = None\n")
         f.write("\n\n")
 
@@ -52,6 +53,7 @@ def write_config_file(path):
         f.write("timeout = 1\n")
         f.write("xonxoff = 1\n")
         f.write("rtscts = 0\n")
+        f.write("dsrdtr = 0\n")
         f.write("\n\n")
 
         ## maximum wait time for response from plotter.
@@ -67,6 +69,11 @@ def write_config_file(path):
         f.write("verbose = True\n")
         f.write("\n\n")
 
+        ## disable_software_flow_control
+        f.write("## Set to True if you want to disable Chiplotle's own flow control\n")
+        f.write("## algorithm (e.g., if you have enabled xonxoff, rtscts or dsrdtr above)\n")
+        f.write("disable_software_flow_control = False\n")
+        f.write("\n\n")
 
 #       f.write("## PDF viewer. Set for previewing HPGL commands via the\n")
 #       f.write("## ``view( )`` function. If set to `None`, the viewer will\n")

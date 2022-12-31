@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 from __future__ import absolute_import
 from builtins import zip
 from builtins import str
-from collections import Iterable
+from collections.abc import Iterable
 
 from future import standard_library
 

@@ -5,7 +5,7 @@ from __future__ import absolute_import
 from future import standard_library
 
 standard_library.install_aliases()
-from fractions import gcd
+from math import gcd
 
 
 def lcm(a, b):

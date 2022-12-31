@@ -11,7 +11,7 @@ from __future__ import absolute_import
 from builtins import range
 from builtins import open
 from builtins import int
-from collections import Iterable
+from collections.abc import Iterable
 
 from future import standard_library
 
@@ -24,12 +24,18 @@ from chiplotle.hpgl import commands
 from chiplotle.hpgl.abstract.hpgl import _HPGL
 from chiplotle.tools.logtools.get_logger import get_logger
 from chiplotle.tools.serialtools import VirtualSerialPort
+from chiplotle.plotters.simulatedcommands import simulatedHPGLcommands, simulated_CI
+from chiplotle.tools.hpgltools.inflate_hpgl_string import inflate_hpgl_string
+
 import math
 import re
 import time
 
 
 class _BasePlotter(object):
+
+    allowedHPGLCommands : tuple
+
     def __init__(self, serial_port):
         self.type = "_BasePlotter"
         self._logger = get_logger(self.__class__.__name__)
@@ -37,6 +43,7 @@ class _BasePlotter(object):
         self._hpgl = commands
         self._margins = MarginsInterface(self)
         self.maximum_response_wait_time = get_config_value("maximum_response_wait_time")
+        self.disable_software_flow_control = get_config_value("disable_software_flow_control")
 
         # this is so that we don't pause while preparing and sending
         # full buffers to the plotter. By sending 1/2 buffers we assure
@@ -44,6 +51,13 @@ class _BasePlotter(object):
         # receiving the new data
         self.buffer_size = int(self._buffer_space / 2)
         self.initialize_plotter()
+
+    def flush(self):
+        """ Flushes the output for the plotter, and waits until it's done. 
+        Wait for the Serial port to finish writing the content in the buffer"""
+        self._serial_port.flush()
+        self._sleep_while_buffer_full()
+
 
     @property
     def margins(self):
@@ -101,6 +115,48 @@ class _BasePlotter(object):
                 raise TypeError("Don't know type %s" % type(hpglCommand))
         return command_head.upper() in self.allowedHPGLCommands
 
+    def _is_HPGL_command_simulated(self, hpglCommand):
+        try:
+            command_head = hpglCommand[0:2]
+        except TypeError:
+            try:
+                command_head = hpglCommand._name
+            except AttributeError:
+                raise TypeError("Don't know type %s" % type(hpglCommand))
+        return str(command_head.upper(), encoding="ascii") in simulatedHPGLcommands
+
+    def _simulate_HPGL_command(self, hpglCommand):
+        comm = []
+        try:
+            command_head = hpglCommand[0:2]
+            command = inflate_hpgl_string(hpglCommand)[0]
+        except TypeError:
+            try:
+                command_head = hpglCommand._name
+                command = hpglCommand
+            except AttributeError:
+                raise TypeError("Don't know type %s" % type(hpglCommand))
+
+        match str(command._name, encoding="ascii"):
+            case "CI":
+                r = command.radius
+                ca = command.chordangle
+                comm = simulated_CI(r,ca )
+            case _:
+                raise TypeError("Don't know HPGL command %s" % command._name)
+
+        result = []
+        for c in comm:
+            ## TODO: remove _HPGL from this list...
+            if isinstance(c, (_Shape, _HPGL)):
+                c = c.format
+            else:
+                print(c, type(c))
+            result.append(c)
+        data = b"".join(result)
+
+        return data
+
     def _filter_unrecognized_commands(self, commands):
         self._check_is_bytes(commands)
         result = []
@@ -109,6 +165,9 @@ class _BasePlotter(object):
         for comm in commands:
             if comm:  ## if not an empty string.
                 if self._is_HPGL_command_known(comm):
+                    result.append(comm + b";")
+                elif self._is_HPGL_command_simulated(comm):
+                    comm = self._simulate_HPGL_command(comm)
                     result.append(comm + b";")
                 else:
                     msg = "HPGL command `%s` not recognized by %s. Command not sent."
@@ -137,7 +196,8 @@ class _BasePlotter(object):
         data = self._filter_unrecognized_commands(data)
         data = self._slice_string_to_buffer_size(data)
         for chunk in data:
-            self._sleep_while_buffer_full()
+            if (self.disable_software_flow_control is False):
+                self._sleep_while_buffer_full()
             self._serial_port.write(chunk)
 
     def _check_is_bytes(self, data):
