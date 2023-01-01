@@ -24,7 +24,7 @@ from chiplotle.hpgl import commands
 from chiplotle.hpgl.abstract.hpgl import _HPGL
 from chiplotle.tools.logtools.get_logger import get_logger
 from chiplotle.tools.serialtools import VirtualSerialPort
-from chiplotle.plotters.simulatedcommands import simulatedHPGLcommands, simulated_CI
+from chiplotle.plotters.simulatedcommands import simulatedHPGLcommands, simulated_CI, simulated_AA
 from chiplotle.tools.hpgltools.inflate_hpgl_string import inflate_hpgl_string
 
 import math
@@ -142,6 +142,9 @@ class _BasePlotter(object):
                 r = command.radius
                 ca = command.chordangle
                 comm = simulated_CI(r,ca )
+            case "AA":
+                current_pos, _ = self.actual_position
+                comm = simulated_AA(current_pos.x, current_pos.y, command.x, command.y, command.angle, command.chordtolerance)
             case _:
                 raise TypeError("Don't know HPGL command %s" % command._name)
 
