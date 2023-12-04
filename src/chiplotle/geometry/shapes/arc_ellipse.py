@@ -1,11 +1,3 @@
-from __future__ import division
-from __future__ import unicode_literals
-from __future__ import print_function
-from __future__ import absolute_import
-from builtins import range
-from future import standard_library
-
-standard_library.install_aliases()
 from chiplotle.geometry.core.coordinate import Coordinate
 from chiplotle.geometry.core.path import Path
 import math
@@ -17,7 +9,7 @@ def arc_ellipse(
     """
    Constructs an arc from an ellipse with the given width, height,
    and number of segments. Arc goes from start_angle to end_angle,
-   both of which are in radians.
+   both of which are in radians. Arc is always drawn counter clock wise.
 
       - `segmentation_mode` : '2PI' or 'arc'. The first segments
          the whole ellipse into the given number of segments,

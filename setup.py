@@ -42,8 +42,7 @@ setup(
     package_dir={'': 'src'},
     install_requires=[
         "pyserial>=3",
-        "numpy<=2",
-        "future>=0.16.0"
+        "numpy<=2"    
     ],
     entry_points={
         "console_scripts": [

@@ -3,15 +3,8 @@
  *
  *  http://music.columbia.edu/cmc/chiplotle
 """
-from __future__ import print_function
-from __future__ import division
-from __future__ import unicode_literals
-from __future__ import absolute_import
-
-from future import standard_library
 from six import string_types
 
-standard_library.install_aliases()
 from chiplotle.plotters.baseplotter import _BasePlotter
 from chiplotle.geometry.core.coordinate import Coordinate
 

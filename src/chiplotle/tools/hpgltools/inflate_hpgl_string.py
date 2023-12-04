@@ -1,11 +1,4 @@
-from __future__ import print_function
-from __future__ import unicode_literals
-from __future__ import division
-from __future__ import absolute_import
-from future import standard_library
 from six import string_types
-
-standard_library.install_aliases()
 # WARNING: Do not remove the line below, it is not dead code, it is needed for inflate_hpgl_string
 # which uses `eval` to construct the correct HPGL command.
 from chiplotle.hpgl import commands as hpgl  # NOQA

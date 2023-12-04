@@ -21,9 +21,11 @@ should work with any HPGL-compliant device.
 
 Chiplotle is written and maintained by Victor Adan and Douglas Repetto.
 
-This version includes support for Python 3.11 and also supports the HP 7440A plotter, which lacks some commands but has 8 color pens.
-This version also includes some code to simulate the missing commands for the 7440A.
-
+This version has a few improvements:
+1. removes support for Python 2, but is updated to work on Python 3.12. 
+2. supports the HP 7440A ColorPro plotter, which lacks some commands but has 8 color pens.
+3. Simulates the 17440A Graphics Enhancement Cartridge for the 7440A, by adding a few missing commands, specifically CI (circle), AA (arc), and AR (relative arc). Several more commands are in the works. These commands are simulated in software.
+4. Implements DTR/DSR and removes software flow control when hardware flow control is enabled, speeding up plotting.
 
 
 Find all there is to know about Chiplotle at:

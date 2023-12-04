@@ -1,10 +1,5 @@
-from __future__ import print_function
-from __future__ import division
-from __future__ import absolute_import
-from future import standard_library
 from pytest import raises
 
-standard_library.install_aliases()
 from chiplotle.geometry.core.group import Group
 from chiplotle.geometry.core.path import Path
 
