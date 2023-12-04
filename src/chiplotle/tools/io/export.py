@@ -25,11 +25,11 @@ def export(expr, filename, fmt="eps"):
         objects to image files.
     """
 
-    htmlfile = "{0}.hpgl".format(filename)
+    hpglfile = "{0}.hpgl".format(filename)
     imgfile = "{0}.{1}".format(filename, fmt)
-    save_hpgl(expr, htmlfile)
+    save_hpgl(expr, hpglfile)
 
-    cmd = 'hp2xx --truesize -p 1 -m %s -f "%s" "%s"' % (fmt, imgfile, htmlfile)
+    cmd = 'hp2xx --truesize -p 1 -m %s -f "%s" "%s"' % (fmt, imgfile, hpglfile)
     p = subprocess.Popen(
         cmd,
         shell=True,
@@ -39,7 +39,7 @@ def export(expr, filename, fmt="eps"):
     )
     stdout, stderr = p.communicate()
 
-    if "not found" in stderr:
+    if ("not found" in stderr) or ("not recognized" in stderr) :
         print(_hp2xxError())
 
     return imgfile

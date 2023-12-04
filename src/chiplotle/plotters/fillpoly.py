@@ -4,6 +4,7 @@ from chiplotle import *
 import chiplotle.geometry as geometry
 
 MAXPOLY = 1024
+intersect_skew = 0.0000001
 
 def fill(polygon: CoordinateArray, numpoints : int, point1: Coordinate,
 	  filltype: int,  spacing: float,
@@ -132,10 +133,10 @@ def fill(polygon: CoordinateArray, numpoints : int, point1: Coordinate,
                 else:
                     continue
 
-                if ((segy < min(polygon[j].y, polygon[j + 1].y) - 0.0000001)
-                    or (segy > max(polygon[j].y, polygon[j + 1].y) + 0.000000001)
-                    or (segx < min(polygon[j].x, polygon[j + 1].x) - 0.000000001)
-                    or (segx > max( polygon[j].x, polygon[j + 1].x))): 
+                if ((segy < min(polygon[j].y, polygon[j + 1].y) - intersect_skew)
+                    or (segy > max(polygon[j].y, polygon[j + 1].y) + intersect_skew)
+                    or (segx < min(polygon[j].x, polygon[j + 1].x) - intersect_skew)
+                    or (segx > max( polygon[j].x, polygon[j + 1].x) + intersect_skew)): 
                     print("intersection  at %f %f is not within (%f,%f)-(%f,%f)\n" % 
                     (segx,segy,polygon[j].x,polygon[j].y,polygon[j+1].x,polygon[j+1].y ))
                 else:
@@ -242,10 +243,10 @@ def fill(polygon: CoordinateArray, numpoints : int, point1: Coordinate,
                 else:
                     continue
 
-                if ((segy < min(polygon[j].y, polygon[j + 1].y) - 1.)
-                    or (segy > max(polygon[j].y, polygon[j + 1].y) + 1.)
-                    or (segx < min(polygon[j].x, polygon[j + 1].x))
-                    or (segx > max(polygon[j].x, polygon[j + 1].x))):
+                if ((segy < min(polygon[j].y, polygon[j + 1].y) - intersect_skew)
+                    or (segy > max(polygon[j].y, polygon[j + 1].y) + intersect_skew)
+                    or (segx < min(polygon[j].x, polygon[j + 1].x) - intersect_skew)
+                    or (segx > max(polygon[j].x, polygon[j + 1].x) + intersect_skew)):
                     print("intersection  at %f %f is not within (%f,%f)-(%f,%f)\n" % 
                     (segx,segy,polygon[j].x,polygon[j].y,polygon[j+1].x,polygon[j+1].y ))
                 else:

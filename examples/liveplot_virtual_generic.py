@@ -30,4 +30,4 @@ plotter.write(hpgl.CI(250))
 plotter.select_pen(4)
 plotter.write(hpgl.CI(125))
 
-io.view(plotter)
+io.view(plotter,"hpgl")
