@@ -3,19 +3,8 @@
  *
  *  http://music.columbia.edu/cmc/chiplotle
 """
-from __future__ import division
-from __future__ import unicode_literals
-from __future__ import print_function
-from __future__ import absolute_import
-
-from builtins import range
-from builtins import open
-from builtins import int
 from collections.abc import Iterable
 
-from future import standard_library
-
-standard_library.install_aliases()
 from chiplotle.core.cfg.get_config_value import get_config_value
 from chiplotle.core.interfaces.margins.interface import MarginsInterface
 from chiplotle.geometry.core.shape import _Shape
@@ -24,7 +13,7 @@ from chiplotle.hpgl import commands
 from chiplotle.hpgl.abstract.hpgl import _HPGL
 from chiplotle.tools.logtools.get_logger import get_logger
 from chiplotle.tools.serialtools import VirtualSerialPort
-from chiplotle.plotters.simulatedcommands import simulatedHPGLcommands, simulated_CI, simulated_AA
+from chiplotle.plotters.simulatedcommands import simulatedHPGLcommands, simulated_CI, simulated_AA, simulated_AR
 from chiplotle.tools.hpgltools.inflate_hpgl_string import inflate_hpgl_string
 
 import math
@@ -35,6 +24,10 @@ import time
 class _BasePlotter(object):
 
     allowedHPGLCommands : tuple
+
+    computedPosition : Coordinate
+    penDown : bool # true if down, false if up
+    relativePlottingMode : bool # True if in relative mode, False if in Absolute mode
 
     def __init__(self, serial_port):
         self.type = "_BasePlotter"
@@ -50,6 +43,12 @@ class _BasePlotter(object):
         # that the plotter will still have some data to plot while
         # receiving the new data
         self.buffer_size = int(self._buffer_space / 2)
+
+        # set state
+        self.computedPosition = None # if None, system doesn't know the position, need to ask the plotter
+        self.penDown = False
+        self.relativePlottingMode = False
+
         self.initialize_plotter()
 
     def flush(self):
@@ -72,9 +71,66 @@ class _BasePlotter(object):
         self.write(self._hpgl.On())
         self.write(self._hpgl.IN())
 
+    def compute_position(self, data : bytes):
+        """ Compute the position and state of the pen, so that we don't 
+        have to query it all the time OA which is slow. If the position is unknown,
+        then do ask the plotter with OA.
+        
+        data : a string of HPGL commands off of which to compute the position."""
+        def absolute_scan(coord:list) -> Coordinate:
+            l = len(coord)
+            if l>1 and (l%2)==0:
+                return Coordinate(float(coord[l-2]),float(coord[l-1])) 
+            else:
+                return None
+        
+        def relative_scan(coord:list) -> Coordinate:
+            l = len(coord)
+            if l>1 and (l%2)==0:
+                c = Coordinate(0,0)
+                for n in range(0,int(l/2)):
+                    c = c + Coordinate(float(coord[n*2]),float(coord[n*2+1])) 
+                return c
+            else:
+                return None
+
+        oldPosition : Coordinate = self.computedPosition
+        self.computedPosition = None
+        for command in data.split(b';'):
+            clean = command.strip().upper()
+            if clean[0:2] in [b'IN', b'DF', b'PA']:
+                self.computedPosition = oldPosition
+                self.relativePlottingMode = False
+            if clean[0:2] == b'PR':
+                self.computedPosition = oldPosition
+                self.relativePlottingMode = True
+            if clean[0:2] == b'PU':
+                self.computedPosition = oldPosition
+                self.penDown = False
+            if clean[0:2] == b'PD':
+                self.computedPosition = oldPosition
+                self.penDown = True
+            if clean[0:2] in [b'SP']:
+                self.computedPosition = oldPosition
+            coord = clean[2:].split(b',')
+            if len(coord) <= 1:
+                continue
+            if clean[0:2] == b'PA':
+                self.computedPosition = absolute_scan(coord)
+            if clean[0:2] == b'PR' and self.computedPosition is not None:
+                self.computedPosition = self.computedPosition + relative_scan(coord)
+            if clean[0:2] in [b'PU', b'PD']:
+                if self.relativePlottingMode and self.computedPosition is not None:
+                    self.computedPosition = self.computedPosition + relative_scan(coord)
+                else:
+                    self.computedPosition = absolute_scan(coord)
+
     def write(self, data):
         """Public access for writing to serial port.
-         data can be an iterator, a string or an _HPGL. """
+        data can be an iterator, a string or an _HPGL. 
+        In order for the positioning algorithm to work,
+        strings need to be complete HPGL commands, not chunks.
+        """
         ## TODO: remove _HPGL from this list...
         if isinstance(data, _HPGL):
             data = data.format
@@ -145,6 +201,8 @@ class _BasePlotter(object):
             case "AA":
                 current_pos, _ = self.actual_position
                 comm = simulated_AA(current_pos.x, current_pos.y, command.x, command.y, command.angle, command.chordtolerance)
+            case "AR":
+                comm = simulated_AR(command.x, command.y, command.angle, command.chordtolerance)
             case _:
                 raise TypeError("Don't know HPGL command %s" % command._name)
 
@@ -197,6 +255,8 @@ class _BasePlotter(object):
         """ Write data to serial port. data is expected to be a string."""
         self._check_is_bytes(data)
         data = self._filter_unrecognized_commands(data)
+        self.compute_position(data)
+#        print(f'Pen Pos: ({self.computedPosition}) Pen Down: {self.penDown}')
         data = self._slice_string_to_buffer_size(data)
         for chunk in data:
             if (self.disable_software_flow_control is False):
@@ -256,12 +316,17 @@ class _BasePlotter(object):
     @property
     def actual_position(self):
         """Output the actual position of the plotter pen. Returns a tuple
-      (Coordinate(x, y), pen status)"""
-        response = self._send_query(self._hpgl.OA()).split(b",")
+      (Coordinate(x, y), pen down status)"""
+        # if we don't know the position, ask the plotter
+        if self.computedPosition == None:
+            response = self._send_query(self._hpgl.OA()).split(b",")
+            self.computedPosition = Coordinate(eval(response[0]), eval(response[1]))
+            self.penDown = bool(eval(response[2].strip(b"\r")))
         return [
-            Coordinate(eval(response[0]), eval(response[1])),
-            eval(response[2].strip(b"\r")),
+            self.computedPosition,
+            self.penDown,
         ]
+
 
     @property
     def carousel_type(self):

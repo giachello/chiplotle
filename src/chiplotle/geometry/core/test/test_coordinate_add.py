@@ -1,11 +1,4 @@
-from __future__ import print_function
-from __future__ import division
-from __future__ import absolute_import
-
 import pytest
-from future import standard_library
-
-standard_library.install_aliases()
 from chiplotle import *
 from pytest import raises
 

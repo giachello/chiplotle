@@ -1,13 +1,3 @@
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from __future__ import absolute_import
-from builtins import int
-from builtins import map
-from builtins import str
-from future import standard_library
-
-standard_library.install_aliases()
 import numbers
 import operator
 import math
@@ -36,9 +26,17 @@ class Coordinate(object):
     def x(self):
         return self.xy[0]
 
+    @x.setter
+    def x(self, value):
+        self._coords[0] = value
+
     @property
     def y(self):
         return self.xy[1]
+
+    @y.setter
+    def y(self, value):
+        self._coords[1] = value
 
     @property
     def magnitude(self):
